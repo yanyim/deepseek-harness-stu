@@ -1,7 +1,7 @@
 # Demo 02 · Cordis 五概念——用真源码独立运行
 
-回答的问题(出自笔记库 `guide/02-cordis-core.md`):dsh 的插件机制由 Cordis 提供,
-五个核心概念(插件形态 / 服务容器 / inject / 类型化事件 / 可逆 effect)到底长什么样?
+回答的问题(出自笔记库 `guide/02-cordis-core.md`,延伸问答见 `qa/02-插件机制很普通与大图失控.md`):
+dsh 的插件机制由 Cordis 提供,五个核心概念(插件形态 / 服务容器 / inject / 类型化事件 / 可逆 effect)到底长什么样?
 **Cordis 能脱离 dsh 独立运行吗?**
 
 **答案一句话**:能——`@deepseek-ai/cordis` 在 npm 独立发布(v4.0.2,运行时依赖仅
