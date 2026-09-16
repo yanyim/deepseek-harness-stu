@@ -1,0 +1,8 @@
+# 第二课:waterfall 三姿态——观察者/放行者/否决器同挂一个 tools/pre-execute
+- name: '@deepseek-ai/dsh-system-prompt'
+- name: '@deepseek-ai/dsh-tools'
+- name: './src/lesson-2-waterfall/waterfall-auditor.ts'
+- name: './src/lesson-2-waterfall/approver-allow.ts'
+- name: './src/lesson-2-waterfall/approver-veto.ts'
+- name: './src/lesson-2-waterfall/greet-registry.ts'
+- name: './src/lesson-2-waterfall/lesson-2-driver.ts'
