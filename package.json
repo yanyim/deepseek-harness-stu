@@ -6,6 +6,7 @@
   "description": "DeepSeek Harness 学习实践仓库:跑通教程 demo、重写验证、编写测试用例",
   "scripts": {
     "demo:01": "node demos/01-protocol-thickness/src/main.ts",
+    "demo:02": "node demos/02-cordis-core/src/main.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -14,5 +15,8 @@
     "typescript": "^5.9.0",
     "vitest": "^3.2.4"
   },
-  "packageManager": "pnpm@10.15.1"
+  "packageManager": "pnpm@10.15.1",
+  "dependencies": {
+    "@deepseek-ai/cordis": "^4.0.2"
+  }
 }
