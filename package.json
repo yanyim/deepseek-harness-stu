@@ -7,6 +7,7 @@
   "scripts": {
     "demo:01": "node demos/01-protocol-thickness/src/main.ts",
     "demo:02": "node demos/02-cordis-core/src/main.ts",
+    "demo:03": "node demos/03-naive-kernel-crash/src/main.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
