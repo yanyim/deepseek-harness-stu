@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { SubOfBase, SubOfFacade } from './facade-pattern.ts'
+import { SubOfBase, SubOfFacade, WitnessOfThis } from './facade-pattern.ts'
 
 describe('qa/03 追问二:12 行复刻「this 换人」——registerAdapter 只知道 sub,怎么避开 sub.stream', () => {
   it('门面姿势:runtime 调了 sub,但父类方法体把调用转移给内部对象 → override 死代码', () => {
@@ -24,5 +24,11 @@ describe('qa/03 追问二:12 行复刻「this 换人」——registerAdapter 只
     const sub = new SubOfBase()
     const out = sub.prepareCall().stream('hi')
     expect(out).toBe('我的override(hi)')
+  })
+
+  it('追问三校对:父类代码里的 this 就是子类实例本身——查找决定跑哪段代码,不改变 this 绑定', () => {
+    const w = new WitnessOfThis()
+    w.prepareCall() // runtime 入口:方法在 Facade.prototype 上找到,this 却是 w
+    expect(w.receivers[0]).toBe(w) // 同一性:父类链路运行时的 receiver === 子类实例
   })
 })

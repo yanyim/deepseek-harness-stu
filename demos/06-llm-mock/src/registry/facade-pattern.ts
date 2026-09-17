@@ -59,3 +59,14 @@ export class SubOfBase extends BaseLikeLlm {
     return `我的override(${opts})`
   }
 }
+
+/** 见证者(qa/03 追问三校对):父类代码经原型链执行时,this 就是子类实例本身,
+ *  不是「parent 的 this」——查找决定跑哪段代码,不改变 this 绑定。 */
+export class WitnessOfThis extends Facade {
+  readonly receivers: unknown[] = []
+
+  override implementation() {
+    this.receivers.push(this) // 此刻正在执行的是 Facade.prepareCall 调来的父类链路
+    return new Internal()
+  }
+}
