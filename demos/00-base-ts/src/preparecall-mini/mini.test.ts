@@ -12,6 +12,7 @@ import {
   DetachedStyle,
   FacadeStyle,
   FacadeSub,
+  SelfFacadeStyle,
   runPrepareCallExperiments,
 } from './mini.ts'
 
@@ -28,6 +29,8 @@ describe('单元三:简化版 prepareCall——四路对照 + 反例', () => {
       '   (直调同样晚绑定——override 死不死取决于走哪条路,不是方法本身)',
       '⑤ 解构姿势:prepare().stream("hi") → TypeError(this=undefined)',
       '   (const s = this.stream 取出的瞬间 this 就丢了——箭头只捕获「自己的」外层 this,救不了别人)',
+      '⑥ 自指门面:stream("hi") → RangeError(栈溢出:无限递归)',
+      '   (自己当自己的内部对象 = 委托链没有基准情形;不需要别的工作对象,就不需要门面——那是姿势一)',
     ])
   })
 
@@ -44,5 +47,10 @@ describe('单元三:简化版 prepareCall——四路对照 + 反例', () => {
   it('字段级:解构姿势抛 TypeError', () => {
     const prepared = new DetachedStyle().prepare()
     expect(() => prepared.stream('x')).toThrow(TypeError)
+  })
+
+  it('字段级:自指门面抛 RangeError——委托链没有基准情形即无限递归', () => {
+    expect(() => new SelfFacadeStyle().stream('x')).toThrow(RangeError)
+    expect(() => new SelfFacadeStyle().prepare()).toThrow(RangeError)
   })
 })

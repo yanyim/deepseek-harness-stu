@@ -85,6 +85,24 @@ export class DetachedStyle extends AdapterRoot {
   }
 }
 
+/** 姿势四·自指(反例,qa 追问):门面自己当自己的内部对象——委托链没有基准情形:
+ *  stream 转发 impl(),impl() 又 new 一个自己,新自己再转发……无限递归,栈溢出。
+ *  教训:门面的意义恰恰是「工作由别的对象做」;若不需要别的工作对象,就根本
+ *  不需要门面——直接写姿势一那样的直活实现即可。 */
+export class SelfFacadeStyle extends AdapterRoot {
+  impl(): SelfFacadeStyle {
+    return new SelfFacadeStyle() // 内部对象 = 另一个我(没有基准情形)
+  }
+
+  override prepare(): Prepared {
+    return this.impl().prepare()
+  }
+
+  stream(msg: string): string {
+    return this.impl().stream(msg)
+  }
+}
+
 export function runPrepareCallExperiments(): string[] {
   const out: string[] = []
 
@@ -105,5 +123,13 @@ export function runPrepareCallExperiments(): string[] {
     out.push(`⑤ 解构姿势:prepare().stream("hi") → ${err instanceof TypeError ? 'TypeError(this=undefined)' : String(err)}`)
   }
   out.push(`   (const s = this.stream 取出的瞬间 this 就丢了——箭头只捕获「自己的」外层 this,救不了别人)`)
+
+  try {
+    new SelfFacadeStyle().stream('hi')
+    out.push('⑥ 自指门面:不该到这里')
+  } catch (err) {
+    out.push(`⑥ 自指门面:stream("hi") → ${err instanceof RangeError ? 'RangeError(栈溢出:无限递归)' : String(err)}`)
+  }
+  out.push(`   (自己当自己的内部对象 = 委托链没有基准情形;不需要别的工作对象,就不需要门面——那是姿势一)`)
   return out
 }
