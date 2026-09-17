@@ -1,20 +1,19 @@
 /**
- * 目标:锁定单元三行为——四路对照矩阵(缺省 prepare 生效/门面 prepare 转移死代码/
- *       门面直调转发活路/子类旁路直调命中)+ 解构反例 + abstract 强制力(@ts-expect-error)。
- * 思路:剧本整列 toEqual + 字段级断言;与 demos/06 真实链路版探针 C/D 同构。
- * 对照:./mini.ts;demos/06 registry/subclass-probe.ts + facade-pattern.ts;
+ * 目标:锁定单元三行为——六姿势对照矩阵 + 字段级断言(与 demos/06 真实链路版
+ *       探针 C/D 同构)。
+ * 思路:剧本整列 toEqual(experiments.ts 共用)+ 每姿势标本一个字段级用例;
+ *       abstract 强制力的编译层证据在 prepared.ts 的 @ts-expect-error。
+ * 对照:./prepared.ts ./base-style.ts ./facade-style.ts ./detached-style.ts
+ *       ./self-facade.ts;demos/06 registry/subclass-probe.ts + facade-pattern.ts;
  *       qa/03「机制墙的原理」与「门面为什么挂 stream」。
  */
 import { describe, expect, it } from 'vitest'
 
-import {
-  BaseSub,
-  DetachedStyle,
-  FacadeStyle,
-  FacadeSub,
-  SelfFacadeStyle,
-  runPrepareCallExperiments,
-} from './mini.ts'
+import { BaseSub } from './base-style.ts'
+import { DetachedStyle } from './detached-style.ts'
+import { FacadeStyle, FacadeSub } from './facade-style.ts'
+import { runPrepareCallExperiments } from './experiments.ts'
+import { SelfFacadeStyle } from './self-facade.ts'
 
 describe('单元三:简化版 prepareCall——四路对照 + 反例', () => {
   it('五幕剧本整列锁定', () => {

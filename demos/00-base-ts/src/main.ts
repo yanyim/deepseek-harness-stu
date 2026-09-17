@@ -8,7 +8,7 @@
  *       qa/03 追问二/三;规范:ECMAScript 方法调用求值规则。
  */
 import { runLookupExperiments } from './lookup-vs-binding/experiments.ts'
-import { runPrepareCallExperiments } from './preparecall-mini/mini.ts'
+import { runPrepareCallExperiments } from './preparecall-mini/experiments.ts'
 import { runEscapeExperiments } from './this-escape/escape.ts'
 
 console.log('══ 幕一:查找决定代码,this 绑定决定身份(两个独立机制)══')

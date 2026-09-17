@@ -58,9 +58,15 @@ pnpm typecheck
   this-escape/             幕二:丢失与找回
     escape.ts                六个实验 + TypeError 单独断言
     escape.test.ts
-  preparecall-mini/        幕三:简化版 prepareCall
-    mini.ts                  三姿势标本(Prepared 接口 = PreparedAdapterCall 骨架)
-    mini.test.ts
+  preparecall-mini/        幕三:简化版 prepareCall(一姿势一标本文件)
+    prepared.ts              公共地基:Prepared 接口 + AdapterRoot 抽象根(+ NoStream
+                             的 @ts-expect-error:abstract 强制力证据)
+    base-style.ts            姿势①:基类血脉(缺省 prepare → override 生效)
+    facade-style.ts          姿势②③:门面血脉(prepare 转移 + stream 转发)+ WireTransport
+    detached-style.ts        姿势⑤:解构反例(this 丢失)
+    self-facade.ts           姿势⑥:自指反例(无基准情形,栈溢出)
+    experiments.ts           串场:六姿势缝成对照矩阵剧本
+    mini.test.ts             剧本整列锁定 + 每姿势字段级断言
   main.ts                  串场(幕间串词把三幕缝回 demos/06 的问题)
 ```
 
