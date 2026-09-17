@@ -133,9 +133,14 @@
 
 ## 6. 下一步(优先级)
 
+0. **插件开发阶段已启动**:选题库见根目录 **`PLUGINS.md`(20 个代表性场景,五组分类,
+   每场景标注代表性/依赖/难度)**。用户指示「本阶段集中于 plugin 开发,插件是影响结果
+   的最佳方式」。每完成一个场景:a) 在 PLUGINS.md 条目标 ✅ 并登记 demos/NN 编号;
+   b) 有新结论落 qa;验收用 demos/07 的 headless 链路(patch 方法)最多。
 1. **教程 Demo 6 → demos/09**:注册 echo 工具 + mock 适配器吐工具调用,观察两段式 step。
    材料:教程页 `demo-06-tool-echo.md` + 参考代码 `06-tool-echo/`;demos/07 的插件刻意省了
    echo 分支(README 有说明),届时补上;demos/04 的 greet-tool 是工具注册侧的前置。
+   (教程 Demo 7 hooks 的材料正好服务 PLUGINS 场景,可与选题交叉进行。)
 2. 教程 Demo 7(hooks)→ Demo 8(profile)→ 进入 mini-harness。
 3. 可选沉淀:qa/03 的版本差实录合入学习大纲进度页;`00-base-ts` 是否加 call/apply 等按需。
 
