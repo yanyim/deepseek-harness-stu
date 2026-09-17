@@ -50,9 +50,12 @@ pnpm typecheck
     echo-adapter.test.ts          #   锁定:序列形状 / 组装无损 / 取消→finish aborted
   registry/                       # 单元二:注册表的规矩
     duck-adapter.ts               #   鸭子标本:不继承 LlmAdapter 的独立类(qa/03)
+    subclass-probe.ts             #   追问标本:继承 DeepSeekAdapter + override stream
+                                 #   = 死代码(dispatch 不过 this.stream)
     registry.test.ts              #   锁定:DUPLICATE_ADAPTER / all-or-nothing /
                                  #   disposer / replace(0.1.6 新货)/ 注册是 effect /
-                                 #   鸭子实验(裸对象注册即拒;独立类全链路跑通)
+                                 #   鸭子实验(裸对象注册即拒;独立类全链路跑通)/
+                                 #   子类 override 旁路
   protocol-edge/                  # 单元三:协议义务的边界(教程实验 1/3 的作恶版)
     protocol-edge.test.ts         #   锁定:迟到 usage 被无视 / 抛异常→terminal chunk /
                                  #   带内 error 透传 / 瀑布透传与短路

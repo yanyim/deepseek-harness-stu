@@ -13,6 +13,7 @@ import type { StreamChunk } from '@deepseek-ai/dsh-llm'
 
 import { EchoAdapter } from './echo-adapter/echo-adapter.ts'
 import { DuckAdapter } from './registry/duck-adapter.ts'
+import { SubclassedDeepSeekAdapter } from './registry/subclass-probe.ts'
 import { collectChunks, mountLlm } from './stage/harness.ts'
 import { buildRequest } from './stage/request.ts'
 
@@ -67,6 +68,22 @@ console.log('§4 探针 B:DuckAdapter(无 extends)注册并跑通,chunk 序列:'
   duckChunks.map((c) => c.type).join(' → '))
 console.log('   extends LlmAdapter 的真实价值 = 白拿缺省实现(只需写 stream),不是身份证明\n')
 duckHandle()
+
+// 探针 C(qa/03 追问):那能不能反过来,继承具体适配器(DeepSeekAdapter)只 override
+// stream?能编译、能注册——但 override 是死代码:DeepSeekAdapter 是门面,
+// providerInfo/prepareCall 都先 this.implementation() 按 protocol 分派,dispatch
+// 闭包绑的是私有传输路径,不经过 this.stream。基类「stream 是扩展点」的承诺,
+// 不自动传给具体子类。
+const sub = new SubclassedDeepSeekAdapter()
+const subHandle = ctx.llm.registerAdapter(['deepseek-mock'], sub)
+const viaRuntime = await collectChunks(ctx.llm.stream(buildRequest({ provider: 'deepseek-mock', model: 'deepseek-chat' })))
+console.log('§4 探针 C:继承 DeepSeekAdapter + override stream → runtime 路径输出:',
+  viaRuntime.map((c) => c.type + (c.type === 'finish' ? `(${c.reason.kind})` : '')).join(' → '))
+console.log('   (标记 chunk 一个没有——dispatch 走了真传输层,连 127.0.0.1:9 失败包成 finish error)')
+const directCall = await collectChunks(sub.stream(buildRequest({ provider: 'deepseek-mock', model: 'deepseek-chat' })))
+console.log(`   旁路直调 sub.stream():${directCall.length} 个 chunk,标记在场——方法活着,路不过它`)
+console.log('   想拦截/mock 的正解:llm/stream 瀑布短路(单元三)或自有路由+改配置(demos/07)\n')
+subHandle()
 
 // ── §5 一次完整通话:消费方只认统一词汇表 ────────────────────────────
 const request = buildRequest({

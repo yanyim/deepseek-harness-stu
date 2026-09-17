@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@deepseek-ai/dsh": "0.1.6-alpha.1",
+    "@deepseek-ai/dsh-llm-deepseek": "0.1.6-alpha.1",
     "@types/node": "^22.20.3",
     "tsx": "^4.23.13",
     "typescript": "^5.9.0",

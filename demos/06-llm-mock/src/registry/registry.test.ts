@@ -17,6 +17,7 @@ import { EchoAdapter } from '../echo-adapter/echo-adapter.ts'
 import { collectChunks, mountLlm } from '../stage/harness.ts'
 import { buildRequest } from '../stage/request.ts'
 import { DuckAdapter } from './duck-adapter.ts'
+import { OVERRIDE_MARKER, SubclassedDeepSeekAdapter } from './subclass-probe.ts'
 
 /** 插件形态的适配器注册(guide/04 §4.4:注册是插件的事,effect 卸载时自动撤销)。 */
 const echoPlugin = {
@@ -121,4 +122,30 @@ describe('单元二:注册表的规矩', () => {
       expect(ctx.llm.listProviders()).toEqual([])
     })
   })
+
+  it('qa/03 追问:继承具体适配器(DeepSeekAdapter)+ override stream 是死代码——runtime 路径不经过 this.stream', async () => {
+    await withLlm(async (ctx) => {
+      const sub = new SubclassedDeepSeekAdapter()
+      const handle = ctx.llm.registerAdapter(['deepseek-mock'], sub)
+      // 注册成功:providerInfo 来自门面(implementation 按 protocol 分派),展示名 "DeepSeek"
+      expect(ctx.llm.listProviders().map((p) => p.id)).toEqual(['deepseek-mock'])
+
+      // runtime 路径:prepareCall → implementation 的私有传输层 → 连不可达端口失败
+      // → terminal finish error。override 的标记 chunk 一个都没有。
+      const viaRuntime = await collectChunks(ctx.llm.stream(
+        buildRequest({ provider: 'deepseek-mock', model: 'deepseek-chat' }),
+      ))
+      const sawMarker = viaRuntime.some((c) => c.type === 'text-delta' && c.text.includes(OVERRIDE_MARKER))
+      expect(sawMarker).toBe(false) // override 没跑
+      const last = viaRuntime[viaRuntime.length - 1]
+      expect(last.type === 'finish' && last.reason.kind).toBe('error') // 真传输层跑了,然后失败
+
+      // 旁路直调:方法本身活着——被绕过的只是 runtime 的 dispatch,不是这个方法
+      const direct = await collectChunks(sub.stream(buildRequest({ provider: 'deepseek-mock', model: 'deepseek-chat' })))
+      expect(direct.some((c) => c.type === 'text-delta' && c.text.includes(OVERRIDE_MARKER))).toBe(true)
+      expect(direct[direct.length - 1]).toEqual({ type: 'finish', reason: { kind: 'stop' } })
+
+      handle()
+    })
+  }, 60_000)
 })
