@@ -19,6 +19,7 @@
 - 学习路径:① 原理篇 8 章 → ② 源码拆解 6 章 → ③ 实战 Demo 8 个 → ④ 教学项目 mini-harness(详见笔记库学习大纲)
 - 每学一章:先跑通教程参考代码 → 在本仓库重写 → 写测试锁定行为;总结记入笔记库
 - 学习问答(Q&A)产生的结论落笔记库 `dsh-harness-tutorial/qa/NN-*.md`,配套 demo 落本仓库 `demos/`,两者互相链接
+- **会话交接:根目录 `HANDOVER.md` 是进度+背景知识速查文档;开工先读,收尾(每完成一个 demo/qa)更新它**
 - 教学项目 mini-harness 不抄答案,卡住才看 `dsh-harness-tutorial/参考代码/final-project/`
 - 常规操作直接执行,无需反复确认(用户已授权)
 - 运行环境:Node ≥ 20.19(实际用 22.19);教程 demo 从 Demo 4 起可用 Mock 适配器,无需 API Key
