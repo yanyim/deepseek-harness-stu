@@ -10,11 +10,14 @@
  */
 import { Context, Service } from '@deepseek-ai/cordis'
 
-// 声明合并:类型层让 ctx.greeter / ctx.llm 有类型;泛型参数是 intercept 配置的类型(幽灵类型)
+// 声明合并:类型层让 ctx.greeter / ctx.demoLlm 有类型;泛型参数是 intercept 配置的类型(幽灵类型)。
+// 注意:模块增强是全编译单元共享的——本 demo 的玩具服务曾占用 'llm' 这个名字,demos/06
+// 接入真 dsh-llm 后两个 Context.llm 类型打架,故改名 demoLlm(camelCase 键,ctx 属性名=服务键)。
+// 教训:玩具别占用真实服务的名字。
 declare module '@deepseek-ai/cordis' {
   interface Context {
     greeter: GreeterService
-    llm: DemoLlmService
+    demoLlm: DemoLlmService
   }
 }
 
@@ -37,7 +40,7 @@ export class DemoLlmService extends Service<LlmConfig> {
   temperature: number
 
   constructor(ctx: Context, config?: LlmConfig) {
-    super(ctx, 'llm')
+    super(ctx, 'demoLlm')
     // Service.resolveConfig:沿祖先 intercept 链合并(base 优先级最低,越近的 intercept 越高)
     const merged = this[Service.resolveConfig]({ model: 'deepseek-chat', temperature: 0.7 })
     this.temperature = merged.temperature
@@ -87,15 +90,15 @@ export async function runContainer(): Promise<string[]> {
   out.push(`agentB(另一个隔离)没注册过 greeter = ${String((agentB as { greeter?: GreeterService }).greeter)}`)
 
   // ── intercept:为下方构造的服务合并配置;作用域只影响"构造时解析到什么",不改父级 ──
-  const careful = root.intercept('llm', { temperature: 0.2 })
+  const careful = root.intercept('demoLlm', { temperature: 0.2 })
   await careful.plugin(DemoLlmService)
-  out.push(`intercept(t=0.2) 下构造的 llm.generate = ${careful.llm.generate('写代码')}`)
-  out.push(`(intercept 只改变构造配置;服务注册后全局可见,root.llm 同一个实例)`)
+  out.push(`intercept(t=0.2) 下构造的 demoLlm.generate = ${careful.demoLlm.generate('写代码')}`)
+  out.push(`(intercept 只改变构造配置;服务注册后全局可见,root.demoLlm 同一个实例)`)
 
   // 换个干净 root 验证:没有 intercept 时,resolveConfig 只有 base 默认值 t=0.7
   const plain = new Context()
   await plain.plugin(DemoLlmService)
-  out.push(`无 intercept 的 root 下 llm.generate = ${plain.llm.generate('写代码')}`)
+  out.push(`无 intercept 的 root 下 demoLlm.generate = ${plain.demoLlm.generate('写代码')}`)
 
   await root.fiber.dispose()
   await plain.fiber.dispose()

@@ -23,9 +23,9 @@ describe('概念二:上下文是服务的容器', () => {
       'agentA(隔离)看到的 greeter = FAST(agentA)',
       'root 看到的 greeter 仍是原实现 = 你好,root!',
       'agentB(另一个隔离)没注册过 greeter = undefined',
-      'intercept(t=0.2) 下构造的 llm.generate = 写代码 @t=0.2',
-      '(intercept 只改变构造配置;服务注册后全局可见,root.llm 同一个实例)',
-      '无 intercept 的 root 下 llm.generate = 写代码 @t=0.7',
+      'intercept(t=0.2) 下构造的 demoLlm.generate = 写代码 @t=0.2',
+      '(intercept 只改变构造配置;服务注册后全局可见,root.demoLlm 同一个实例)',
+      '无 intercept 的 root 下 demoLlm.generate = 写代码 @t=0.7',
     ])
   })
 

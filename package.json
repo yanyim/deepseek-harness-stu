@@ -10,6 +10,7 @@
     "demo:03": "node demos/03-naive-kernel-crash/src/main.ts",
     "demo:04": "cd demos/04-first-dsh-plugin && npx tsx ../../node_modules/@deepseek-ai/cordis/bin.js",
     "demo:05": "node --expose-internals demos/05-loading-mechanisms/src/main.ts",
+    "demo:06": "node demos/06-llm-mock/src/main.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
