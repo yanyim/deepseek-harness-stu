@@ -112,8 +112,16 @@
 ## 5. 环境与命令
 
 - Node 22.19(zstd 解压可用)/ pnpm 10.15;ESM。
+- **运行模型(为什么裸 `node xx.ts` 能跑)**:Node 22.18 起类型擦除(type stripping)默认开启
+  (`process.features.typescript === 'strip'`,底层 amaro/SWC,加载时把类型标注擦掉当 JS 执行,
+  **不做类型检查**——`pnpm typecheck` 因此独立存在)。只支持「可擦除」语法:类型注解/interface/
+  type 别名/泛型/as;**enum、namespace、构造器参数属性、旧装饰器**直接语法报错(要生成真实代码,
+  非擦除可办)——这就是 CLAUDE.md 那条禁令的来源。imports 必须写 `.ts` 扩展名(Node 按字面解析
+  说明符,不像 tsc 帮你补)。需要完整转译时用 tsx(devDep,esbuild);`--experimental-transform-types`
+  旗标是 Node 自带的另一档。
 - `pnpm demo:00 … demo:07`(见根 package.json);`pnpm test`(vitest,24 文件 75 用例);
-  `pnpm typecheck`(tsc --noEmit)。
+  `pnpm typecheck`(tsc --noEmit)。demo:04 用 tsx(跑 cordis bin+loader 链路)、demo:05 加
+  `--expose-internals`(要 Node 内部模块)——各有特殊原因,其余都是裸 node。
 - 关键依赖:能力包 + CLI 全部钉在 **0.1.6-alpha.1**(`@deepseek-ai/dsh`、`dsh-llm-deepseek` 为
   devDep;dsh CLI bin:`node_modules/@deepseek-ai/dsh/lib/bin.js`)。
 - demos/07 的 e2e 会 spawn 真实 dsh 子进程(DSH_HOME 隔离在 tmp/demo 目录),零网络。
