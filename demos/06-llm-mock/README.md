@@ -52,6 +52,8 @@ pnpm typecheck
     duck-adapter.ts               #   鸭子标本:不继承 LlmAdapter 的独立类(qa/03)
     subclass-probe.ts             #   追问标本:继承 DeepSeekAdapter + override stream
                                  #   = 死代码(dispatch 不过 this.stream)
+    facade-pattern.ts             #   12 行零依赖复刻「this 换人」:门面 vs 基类姿势
+                                 #   (qa/03 追问二;同名测试锁定)
     registry.test.ts              #   锁定:DUPLICATE_ADAPTER / all-or-nothing /
                                  #   disposer / replace(0.1.6 新货)/ 注册是 effect /
                                  #   鸭子实验(裸对象注册即拒;独立类全链路跑通)/
