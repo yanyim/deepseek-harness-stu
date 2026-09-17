@@ -19,8 +19,8 @@ console.log('\n══ 幕二:this 的丢失与找回(this 属于「调用」,不
 console.log('  方法从对象上取下来直调,this 就没了(ESM 恒 strict → undefined,不是全局对象)。\n')
 for (const line of runEscapeExperiments()) console.log(' ', line)
 
-console.log('\n══ 幕三:简化版 prepareCall(同一调用形态,三种 prepare 写法三种命运)══')
-console.log('  调用形态都是 p.stream("hi") —— 差别只在 prepare 方法体里 this 的去向。\n')
+console.log('\n══ 幕三:简化版 prepareCall(一个抽象根,两条血脉,四路对照 + 一个反例)══')
+console.log('  调用形态都是 stream("hi") —— 差别在 prepare 方法体里 this 的去向,以及你走哪条路。\n')
 for (const line of runPrepareCallExperiments()) console.log(' ', line)
 
 console.log(`

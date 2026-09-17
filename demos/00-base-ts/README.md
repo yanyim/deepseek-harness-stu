@@ -34,10 +34,16 @@ pnpm typecheck
   ③④ 找回两法:bind / 箭头包装
   ⑤⑥ 回调对照:普通函数调用时丢,箭头定义时捕——prepareCall 必须用箭头的缘故
 
-幕三 preparecall-mini     同一调用形态,三种 prepare 写法三种命运
-  姿势一 基类(= LlmAdapter 缺省)  闭包写 this.stream    → override 生效
-  姿势二 门面(= DeepSeekAdapter)   体内 new 内部对象转移 → override 死代码
-  姿势三 解构(反例)               const s = this.stream → this 丢失直接炸
+幕三 preparecall-mini     一个抽象根(= LlmAdapter),两条血脉,四路对照 + 反例
+  根:abstract stream 逼所有具体子类实现它(不挂编译不过,@ts-expect-error 即证据)
+  ① 基类血脉(用缺省 prepare)      闭包写 this.stream    → override 生效
+  ② 门面血脉(= DeepSeekAdapter)    prepare 改写为体内 new 内部对象 → override 死代码
+  ③ 门面直调(不经 prepare)         stream 实现为转发     → 直调也是活路
+  ④ 子类旁路直调                   直调同样晚绑定         → override 命中
+  ⑤ 解构(反例)                     const s = this.stream → this 丢失直接炸
+
+  门面挂 stream 的完整答案:abstract 逼它挂(第一层);它选择挂成「转发给内部
+  对象」(第二层),所以直调能用;只是 runtime 的分派链(prepare)不走它(第三层)。
 ```
 
 ## 组织:目录树 = 论证树
@@ -64,8 +70,9 @@ pnpm typecheck
 | 幕一⑤ 同一性 | `WitnessOfThis`:父类代码 this === 子实例 | —(JS 语言机制) |
 | 幕一④ 晚绑定命中 | EchoAdapter/DuckAdapter 的 override 生效 | `LlmAdapter` 缺省 `prepareCall`:`stream: (options) => this.stream(options)` |
 | 幕二⑤⑥ 闭包捕获 | — | 同上:箭头捕获 prepareCall 运行时的 this |
-| 幕三 姿势二 门面 | 探针 C/D(a):override 死代码、闭包绑内部对象 | `DeepSeekAdapter.prepareCall` → `this.implementation().prepareCall()` |
-| 幕三 姿势三 解构 | —(反例,真实代码不这么写) | — |
+| 幕三 ② 门面 prepare | 探针 C/D(a):override 死代码、闭包绑内部对象 | `DeepSeekAdapter.prepareCall` → `this.implementation().prepareCall()` |
+| 幕三 ③ 门面 stream 转发 | —(直调活路,mini 补齐的保真点) | `DeepSeekAdapter.stream` → `this.implementation().stream(options)` |
+| 幕三 ⑤ 解构 | —(反例,真实代码不这么写) | — |
 
 ## 为什么有这个 demo
 

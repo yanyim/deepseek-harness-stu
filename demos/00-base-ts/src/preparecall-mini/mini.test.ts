@@ -1,35 +1,44 @@
 /**
- * 目标:锁定单元三行为——同一调用形态,三种 prepare 写法三种命运:基类姿势 override
- *       生效;门面姿势 override 死代码(旁路直调仍活);解构姿势直接 TypeError。
- * 思路:剧本整列 + 字段级断言(命中谁/抛什么),与 demos/06 真实链路版探针 C/D 同构。
+ * 目标:锁定单元三行为——四路对照矩阵(缺省 prepare 生效/门面 prepare 转移死代码/
+ *       门面直调转发活路/子类旁路直调命中)+ 解构反例 + abstract 强制力(@ts-expect-error)。
+ * 思路:剧本整列 toEqual + 字段级断言;与 demos/06 真实链路版探针 C/D 同构。
  * 对照:./mini.ts;demos/06 registry/subclass-probe.ts + facade-pattern.ts;
- *       qa/03「机制墙的原理」。
+ *       qa/03「机制墙的原理」与「门面为什么挂 stream」。
  */
 import { describe, expect, it } from 'vitest'
 
 import {
   BaseSub,
   DetachedStyle,
+  FacadeStyle,
   FacadeSub,
   runPrepareCallExperiments,
 } from './mini.ts'
 
-describe('单元三:简化版 prepareCall——三姿势对照', () => {
-  it('三幕剧本整列锁定', () => {
+describe('单元三:简化版 prepareCall——四路对照 + 反例', () => {
+  it('五幕剧本整列锁定', () => {
     expect(runPrepareCallExperiments()).toEqual([
-      '① 基类姿势:p.stream("hi") → SUB.stream(hi)',
-      '   (闭包写 this.stream → 子类 override 生效)',
-      '② 门面姿势:p.stream("hi") → wire(hi)',
-      '   (体内 new 内部对象 → override 死代码;旁路直调 sub.stream("hi") → SUB.stream(hi))',
-      '③ 解构姿势:p.stream("hi") → TypeError(this=undefined)',
+      '① 基类姿势(用缺省 prepare):prepare().stream("hi") → SUB.stream(hi)',
+      '   (闭包写 this.stream → 子类 stream 生效)',
+      '② 门面姿势(prepare 改写为转移):prepare().stream("hi") → wire(hi)',
+      '   (分派链不经过 stream → 子类 override 死代码)',
+      '③ 门面直调(不经 prepare):stream("hi") → wire(hi)',
+      '   (stream 是 abstract 逼出来的转发方法——直调也是一条活路)',
+      '④ 子类旁路直调:stream("hi") → SUB.stream(hi)',
+      '   (直调同样晚绑定——override 死不死取决于走哪条路,不是方法本身)',
+      '⑤ 解构姿势:prepare().stream("hi") → TypeError(this=undefined)',
       '   (const s = this.stream 取出的瞬间 this 就丢了——箭头只捕获「自己的」外层 this,救不了别人)',
     ])
   })
 
-  it('字段级:基类姿势命中子类 override,门面姿势命中内部对象、旁路直调仍命中子类', () => {
-    expect(new BaseSub().prepare().stream('x')).toBe('SUB.stream(x)')
-    expect(new FacadeSub().prepare().stream('x')).toBe('wire(x)')
-    expect(new FacadeSub().stream('x')).toBe('SUB.stream(x)')
+  it('字段级:同一条 prepare 链,血脉决定命运', () => {
+    expect(new BaseSub().prepare().stream('x')).toBe('SUB.stream(x)') // 缺省 prepare → override 活
+    expect(new FacadeSub().prepare().stream('x')).toBe('wire(x)') // 门面 prepare → override 死
+  })
+
+  it('字段级:直调两条路——门面转发是活路,子类 override 直调命中', () => {
+    expect(new FacadeStyle().stream('x')).toBe('wire(x)') // 转发实现
+    expect(new FacadeSub().stream('x')).toBe('SUB.stream(x)') // 直调晚绑定
   })
 
   it('字段级:解构姿势抛 TypeError', () => {
