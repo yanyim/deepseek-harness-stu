@@ -2,3 +2,4 @@ node_modules/
 *.log
 .DS_Store
 !demos/05-loading-mechanisms/fixtures/**/node_modules/
+.dsh-home/

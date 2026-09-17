@@ -11,10 +11,12 @@
     "demo:04": "cd demos/04-first-dsh-plugin && npx tsx ../../node_modules/@deepseek-ai/cordis/bin.js",
     "demo:05": "node --expose-internals demos/05-loading-mechanisms/src/main.ts",
     "demo:06": "node demos/06-llm-mock/src/main.ts",
+    "demo:07": "node demos/07-headless-mock/src/main.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@deepseek-ai/dsh": "0.1.6-alpha.1",
     "@types/node": "^22.20.3",
     "tsx": "^4.23.13",
     "typescript": "^5.9.0",

@@ -1,0 +1,23 @@
+# Demo 07 · 无 API Key 跑通真实 Agent 全链路(教程 Demo 5 重写)
+#
+# 用法(在仓库根):
+#   pnpm demo:07
+#
+# 原理:patch 覆盖层只做两件事——
+#   1. insert 一行本地插件:把 MockAdapter 注册进 ctx.llm(提供方路由 "mock")
+#      ⚠️ 0.1.6 实测:相对路径的解析基准是 patch 文件所在目录(dsh-app-boot 的
+#      boot() 用 dirname(configPath) 设 baseUrl),与 cwd 无关;不带 ./ 或 ../
+#      前缀会被 Node 当裸包名,直接 ERR_MODULE_NOT_FOUND。
+#      教程(0.1.0-rc.6)写的是 ../../../ 三级回跳,声称基准是 profile 目录——
+#      版本差:旧版 loader 的基准与新版不同,以本仓库实测为准。
+#   2. 定向替换 agent-default-model 的 config:默认模型路由改到 mock
+#      (注意是整行替换,provider 和 model 都要复述——没有深合并)
+
+- insert:
+    - id: mock-adapter
+      name: ./plugins/mock-adapter.ts
+
+- id: agent-default-model
+  config:
+    provider: mock
+    model: mock-1
