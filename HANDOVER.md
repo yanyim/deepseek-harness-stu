@@ -52,7 +52,8 @@
 | 03 | registerAdapter 怎么识别适配器 + 注册表四规矩 + 机制墙(三追问:override 死因/this 换人/parent 的 this 校准) | demos/06 registry + demos/00 |
 | 04 | **教学版陪读**:guide/05 Agent 循环——turn/step 人话版、时序图逐帧、事件三分类实证(demos/07 日志 ↔ 时序图行行对上)、四动词表、自检清单 | guide/05 + demos/06/07 |
 | 04-附录一 | **问题版重讲**(原 qa/05 改编):20 行笨蛋 Agent 逐坑摔,九问九答 + 收官对照表;Q3 深挖版(候选淘汰赛→cordis 瀑布 12 行→双向数据流→reject=blocked 实锤→两次理解校准实录:共享可变状态误区、机制≠安装点/生命周期拦截点全景表);Q4-Q9 深改版(换模型≠换适配器、流没有「后」、投影思想、事实/算法本体论、工具四姿态闸门、越权链、turn 六种死法) | guide/05 + qa/04 互链 |
-| 04-附录二 | **瀑布机制细讲**:cordis 四种分发模式源码全景、waterfall 12 行六事实、真包四组实测(洋葱双向/否决短路/异常传播/prepend)、值瀑布 vs 流瀑布对照、scope 过滤(每 agent 一条链)、中间件家族定位 | 附录一 + demos/06 |
+| 04-附录二 | **瀑布机制细讲**:cordis 四种分发模式源码全景、waterfall 12 行六事实、真包四组实测(洋葱双向/否决短路/异常传播/prepend)、值瀑布 vs 流瀑布对照、scope 过滤(每 agent 一条链)、中间件家族定位、§8 校准(读者vs关卡)、§9 为何嵌套(淘汰赛+四必杀+Express→Koa) | 附录一 + demos/06/08 |
+| 05 | **会话的本质:日志+投影**——surface 概念(四类事件才上模型可见面;SurfaceOp replace=压缩的武器)、13 种核心事件+插件开放扩展、subagent=fork 血缘(parentSession/origin/平衡前缀种子,值语义天然隔离)、工具全落盘但「日志的大=存储问题,投影的小=预算问题」、压缩=带审计的 surface 手术(compaction/start→summary→replace→end,失败留疤)+四层优化(阈值/purpose 路由/剪枝前置/只压旧区) | guide/07 + demos/07 |
 
 ### 2.3 版本差现状(方法论:实测为准)
 
