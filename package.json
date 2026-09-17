@@ -13,6 +13,7 @@
     "demo:05": "node --expose-internals demos/05-loading-mechanisms/src/main.ts",
     "demo:06": "node demos/06-llm-mock/src/main.ts",
     "demo:07": "node demos/07-headless-mock/src/main.ts",
+    "demo:08": "node demos/08-waterfall-mini/src/main.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

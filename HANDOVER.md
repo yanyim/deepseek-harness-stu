@@ -37,7 +37,8 @@
 | `05-loading-mechanisms` | qa/02 附录四 | `await import` vs `internal.import`:import 的第二个输入(从哪开始找) | ✅ |
 | `06-llm-mock` | **教程 Demo 4** | Mock LLM 适配器:协议义务逐条锁定 + 注册机制解剖(鸭子/子类探针/facade-pattern) | ✅ |
 | `07-headless-mock` | **教程 Demo 5** | 真实 dsh CLI 全链路零网络:patch 覆盖层 + 会话日志审计 | ✅ |
-| `08-*`(待建) | **教程 Demo 6(下一步)** | 注册工具并观察工具循环:适配器吐 `tool-call` 块 + `finish {kind:'tool-calls'}`,两段式 step | ⬜ |
+| `08-waterfall-mini` | qa/04-附录二(动手版) | 教学版 waterfall:值/流两种载荷同一句型,六实验锁定(洋葱双向/否决/异常穿透/prepend/透传/短路) | ✅ |
+| `09-*`(待建) | **教程 Demo 6(下一步)** | 注册工具并观察工具循环:适配器吐 `tool-call` 块 + `finish {kind:'tool-calls'}`,两段式 step | ⬜ |
 
 之后:教程 Demo 7(hooks 拦截)→ Demo 8(profile 组装)→ mini-harness 教学项目(不抄答案,
 卡住才看 `参考代码/final-project/`)。
@@ -131,7 +132,7 @@
 
 ## 6. 下一步(优先级)
 
-1. **教程 Demo 6 → demos/08**:注册 echo 工具 + mock 适配器吐工具调用,观察两段式 step。
+1. **教程 Demo 6 → demos/09**:注册 echo 工具 + mock 适配器吐工具调用,观察两段式 step。
    材料:教程页 `demo-06-tool-echo.md` + 参考代码 `06-tool-echo/`;demos/07 的插件刻意省了
    echo 分支(README 有说明),届时补上;demos/04 的 greet-tool 是工具注册侧的前置。
 2. 教程 Demo 7(hooks)→ Demo 8(profile)→ 进入 mini-harness。
