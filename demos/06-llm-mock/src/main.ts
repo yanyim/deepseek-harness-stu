@@ -1,7 +1,8 @@
 /**
  * 目标:Demo 06 串场入口——「模型提供方也是一个插件」的最小可运行证明。叙事顺序
- *       =论证顺序:巴别塔困境 → 挂接缝 → 假提供方上线 → 一次完整通话 → 取消 →
- *       瀑布拦截 → 原子换路由 → 下线。每一段都是对 guide/04 一个小节的现场版。
+ *       =论证顺序:巴别塔困境 → 挂接缝 → 假提供方上线 → 解剖注册机制(鸭子实验)→
+ *       一次完整通话 → 取消 → 瀑布拦截 → 原子换路由 → 下线。每一段都是对 guide/04
+ *       一个小节的现场版。
  * 思路:与测试同一批模块(stage + echo-adapter),main 只负责把这些块按论证顺序
  *       走一遍并打印观察点;行为锁定在测试里,这里只做「肉眼可见」。
  * 对照:教程 demos/04-llm-mock/main.ts(0.1.0-rc.6 单块版);guide/04 全章;
@@ -11,6 +12,7 @@ import { BlockAssembler } from '@deepseek-ai/dsh-llm'
 import type { StreamChunk } from '@deepseek-ai/dsh-llm'
 
 import { EchoAdapter } from './echo-adapter/echo-adapter.ts'
+import { DuckAdapter } from './registry/duck-adapter.ts'
 import { collectChunks, mountLlm } from './stage/harness.ts'
 import { buildRequest } from './stage/request.ts'
 
@@ -43,11 +45,34 @@ const handle = ctx.llm.registerAdapter(['mock'], echo)
 console.log('§3 EchoAdapter 已注册到路由 "mock";已注册提供方:',
   ctx.llm.listProviders().map((p) => `${p.id}(${p.name})`).join(', ') || '(空)')
 
-// ── §4 一次完整通话:消费方只认统一词汇表 ────────────────────────────
+// ── §4 解剖注册机制:不认血缘认行为(qa/03)───────────────────────────
+// registerAdapter 全程没有 instanceof。名字 'mock' 也不是身份证明,它只是
+// ctx.llm 自家注册表(Map)里的路由键。识别靠两道「行为摸底」:
+//   注册时立刻调 providerInfo / providerRetryPolicy;调用时走 prepareCall → stream。
+// 探针 A:裸对象 —— 编译层被 TS 拦(@ts-expect-error 绕过只为做实验),
+//         运行层在注册时被拒:providerInfo is not a function。
+try {
+  // @ts-expect-error 探针 A:故意绕过编译层,观察运行层怎么拒绝
+  ctx.llm.registerAdapter(['broken'], {})
+  console.log('§4 探针 A:裸对象注册成功(不该到这里)')
+} catch (err) {
+  console.log('§4 探针 A:裸对象被拒 ——', (err as Error).constructor.name, ':', (err as Error).message)
+}
+// 探针 B:不继承 LlmAdapter 的独立类,把七个结构成员手工复刻(含基类白送的
+//         缺省实现)—— 注册 + 通话全通。注意这里连 @ts-expect-error 都不用:
+//         TS 类型系统本来就是结构化的,结构齐了就放行。
+const duckHandle = ctx.llm.registerAdapter(['duck'], new DuckAdapter())
+const duckChunks = await collectChunks(ctx.llm.stream(buildRequest({ provider: 'duck', model: 'duck-1' })))
+console.log('§4 探针 B:DuckAdapter(无 extends)注册并跑通,chunk 序列:',
+  duckChunks.map((c) => c.type).join(' → '))
+console.log('   extends LlmAdapter 的真实价值 = 白拿缺省实现(只需写 stream),不是身份证明\n')
+duckHandle()
+
+// ── §5 一次完整通话:消费方只认统一词汇表 ────────────────────────────
 const request = buildRequest({
   tools: [{ name: 'echo', description: '原样返回', parameters: { type: 'object', properties: {} } }],
 })
-console.log('\n§4 流式调用开始(provider=mock, model=mock-1, 双块交织):')
+console.log('\n§5 流式调用开始(provider=mock, model=mock-1, 双块交织):')
 const assembler = new BlockAssembler()
 for await (const chunk of ctx.llm.stream(request)) {
   console.log(`  chunk: ${describe(chunk)}`)
@@ -61,15 +86,15 @@ for (const block of blocks) {
 console.log('  usage:', JSON.stringify(assembler.usage))
 console.log('  finish:', JSON.stringify(assembler.finish))
 
-// ── §5 取消:消费方永远拿到合法终止 ──────────────────────────────────
-console.log('\n§5 取消演示:150ms 后 abort,取消在下一个 delta 边界生效:')
+// ── §6 取消:消费方永远拿到合法终止 ──────────────────────────────────
+console.log('\n§6 取消演示:150ms 后 abort,取消在下一个 delta 边界生效:')
 const ac = new AbortController()
 setTimeout(() => ac.abort(), 150)
 for await (const chunk of ctx.llm.stream({ ...request, signal: ac.signal })) {
   console.log(`  chunk: ${describe(chunk)}`)
 }
 
-// ── §6 瀑布拦截:llm/stream 包裹每一次调用 ──────────────────────────
+// ── §7 瀑布拦截:llm/stream 包裹每一次调用 ──────────────────────────
 let counted = 0
 ctx.on('llm/stream', async function* (_options, next) {
   for await (const chunk of next()) {
@@ -78,18 +103,18 @@ ctx.on('llm/stream', async function* (_options, next) {
   }
 })
 const relayed = await collectChunks(ctx.llm.stream(request))
-console.log(`\n§6 llm/stream 监听器数到 ${counted} 个 chunk,消费端实收 ${relayed.length} 个(一一对应)`)
+console.log(`\n§7 llm/stream 监听器数到 ${counted} 个 chunk,消费端实收 ${relayed.length} 个(一一对应)`)
 console.log(`   token 统计监听器/短路测试插件就挂在这条瀑布上(guide/04 §4.5)`)
 
-// ── §7 原子换路由:0.1.6 的 replace(教程 0.1.0-rc.6 还没有) ─────────
+// ── §8 原子换路由:0.1.6 的 replace(教程 0.1.0-rc.6 还没有) ─────────
 handle.replace(['mock-v2'])
-console.log('\n§7 handle.replace(["mock-v2"]) 后,提供方列表:',
+console.log('\n§8 handle.replace(["mock-v2"]) 后,提供方列表:',
   ctx.llm.listProviders().map((p) => p.id).join(', '))
 const afterReplace = await collectChunks(ctx.llm.stream(buildRequest({ provider: 'mock-v2' })))
 console.log(`   从新路由通话一次:finish ${afterReplace[afterReplace.length - 1].type === 'finish' ? 'stop' : '?'}(请求随路由走)`)
 
-// ── §8 下线:disposer 一调即清空,「切换模型服务」的本质 ─────────────
+// ── §9 下线:disposer 一调即清空,「切换模型服务」的本质 ─────────────
 handle()
-console.log('\n§8 适配器已注销,提供方列表:', ctx.llm.listProviders().length === 0 ? '(空)' : ctx.llm.listProviders().map((p) => p.id).join(', '))
+console.log('\n§9 适配器已注销,提供方列表:', ctx.llm.listProviders().length === 0 ? '(空)' : ctx.llm.listProviders().map((p) => p.id).join(', '))
 console.log('   想象设置页切换模型服务 = 调一次 disposer + 一次新注册(或一次 replace)')
 await ctx.fiber.dispose()

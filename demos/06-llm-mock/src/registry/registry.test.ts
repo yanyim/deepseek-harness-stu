@@ -7,6 +7,7 @@
  * 对照:guide/04 §4.4 注册表的规矩;dsh 源码 packages/llm/llm 的 LlmRuntime
  *       (registerAdapter/prepareRoutes/commitRoutes);教程 demos/04 实验 2
  *       (重复注册);replace 是 0.1.6 新货,教程(0.1.0-rc.6)没有——版本差红利。
+ *       末两用例是 qa/03 的鸭子实验:注册不认血缘认行为。
  */
 import { describe, expect, it } from 'vitest'
 import type { Context } from '@deepseek-ai/cordis'
@@ -15,6 +16,7 @@ import { LlmError } from '@deepseek-ai/dsh-llm'
 import { EchoAdapter } from '../echo-adapter/echo-adapter.ts'
 import { collectChunks, mountLlm } from '../stage/harness.ts'
 import { buildRequest } from '../stage/request.ts'
+import { DuckAdapter } from './duck-adapter.ts'
 
 /** 插件形态的适配器注册(guide/04 §4.4:注册是插件的事,effect 卸载时自动撤销)。 */
 const echoPlugin = {
@@ -90,6 +92,33 @@ describe('单元二:注册表的规矩', () => {
       // ctx 本体还活着,再注册一个照样能用——撤销的只是那个插件的路由
       ctx.llm.registerAdapter(['mock'], new EchoAdapter())
       expect(ctx.llm.listProviders().map((p) => p.id)).toEqual(['mock'])
+    })
+  })
+
+  it('qa/03 鸭子实验 A:裸对象在注册时就被拒——注册层是行为摸底,不是类型检查', async () => {
+    await withLlm(async (ctx) => {
+      // 编译层第一道:@ts-expect-error 裸对象不是 LlmAdapter——类型断言也是测试
+      // 运行层第二道:registerAdapter 立刻调用 providerInfo 摸行为,当场 TypeError
+      // @ts-expect-error 故意绕过编译层,观察运行层怎么拒绝
+      expect(() => ctx.llm.registerAdapter(['broken'], {})).toThrow(TypeError)
+      // 拒绝不留痕:注册失败后注册表仍是空的
+      expect(ctx.llm.listProviders()).toEqual([])
+    })
+  })
+
+  it('qa/03 鸭子实验 B:不认血缘认行为——独立类 DuckAdapter(无 extends)结构对齐即可全链路跑通', async () => {
+    await withLlm(async (ctx) => {
+      // 注意这里【不需要】@ts-expect-error:DuckAdapter 虽无继承,但七个结构成员
+      // 齐备,TS 结构化类型直接放行——类型系统本来就不看血缘
+      const handle = ctx.llm.registerAdapter(['duck'], new DuckAdapter())
+      expect(ctx.llm.listProviders().map((p) => p.id)).toEqual(['duck'])
+
+      const chunks = await collectChunks(ctx.llm.stream(buildRequest({ provider: 'duck', model: 'duck-1' })))
+      expect(chunks.map((c) => c.type)).toEqual(['block-start', 'text-delta', 'block-end', 'usage', 'finish'])
+      expect(chunks[chunks.length - 1]).toEqual({ type: 'finish', reason: { kind: 'stop' } })
+
+      handle()
+      expect(ctx.llm.listProviders()).toEqual([])
     })
   })
 })
