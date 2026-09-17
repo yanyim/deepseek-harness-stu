@@ -13,7 +13,7 @@ import type { StreamChunk } from '@deepseek-ai/dsh-llm'
 
 import { EchoAdapter } from './echo-adapter/echo-adapter.ts'
 import { DuckAdapter } from './registry/duck-adapter.ts'
-import { SubclassedDeepSeekAdapter } from './registry/subclass-probe.ts'
+import { SubclassedDeepSeekAdapter, shadowImplementationWithDuck, shadowStreamWithConnection } from './registry/subclass-probe.ts'
 import { collectChunks, mountLlm } from './stage/harness.ts'
 import { buildRequest } from './stage/request.ts'
 
@@ -84,6 +84,27 @@ const directCall = await collectChunks(sub.stream(buildRequest({ provider: 'deep
 console.log(`   旁路直调 sub.stream():${directCall.length} 个 chunk,标记在场——方法活着,路不过它`)
 console.log('   想拦截/mock 的正解:llm/stream 瀑布短路(单元三)或自有路由+改配置(demos/07)\n')
 subHandle()
+
+// 探针 D(机制验证):override 为什么不生效——晚绑定查找发生在「被引用的名字」上。
+// 门面 prepareCall 链:this.implementation()(对 sub 的晚绑定)→ new 内部实现对象
+// → 闭包 (options) => this.streamWithConnection(options, connection),接收者已是内部对象。
+const subA = new SubclassedDeepSeekAdapter()
+shadowStreamWithConnection(subA)
+const handleA = ctx.llm.registerAdapter(['probe-a'], subA)
+const viaA = await collectChunks(ctx.llm.stream(buildRequest({ provider: 'probe-a', model: 'deepseek-chat' })))
+console.log('§4 探针 D(a):实例遮蔽 streamWithConnection →',
+  viaA.map((c) => c.type + (c.type === 'finish' ? `(${c.reason.kind})` : '')).join(' → '))
+console.log('   不生效——闭包接收者是 implementation() new 出的内部对象,查找到不了 sub')
+handleA()
+
+const subB = new SubclassedDeepSeekAdapter()
+shadowImplementationWithDuck(subB, new DuckAdapter())
+const handleB = ctx.llm.registerAdapter(['probe-b'], subB)
+const viaB = await collectChunks(ctx.llm.stream(buildRequest({ provider: 'probe-b', model: 'deepseek-chat' })))
+console.log('§4 探针 D(b):实例遮蔽 implementation →',
+  viaB.map((c) => c.type + (c.type === 'finish' ? `(${c.reason.kind})` : '')).join(' → '))
+console.log('   生效——this.implementation() 是对 sub 的晚绑定;但这是蹭 TS private 内部名,无契约,升级即碎\n')
+handleB()
 
 // ── §5 一次完整通话:消费方只认统一词汇表 ────────────────────────────
 const request = buildRequest({

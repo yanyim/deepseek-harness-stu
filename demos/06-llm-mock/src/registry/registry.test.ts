@@ -17,7 +17,7 @@ import { EchoAdapter } from '../echo-adapter/echo-adapter.ts'
 import { collectChunks, mountLlm } from '../stage/harness.ts'
 import { buildRequest } from '../stage/request.ts'
 import { DuckAdapter } from './duck-adapter.ts'
-import { OVERRIDE_MARKER, SubclassedDeepSeekAdapter } from './subclass-probe.ts'
+import { OVERRIDE_MARKER, SubclassedDeepSeekAdapter, shadowImplementationWithDuck, shadowStreamWithConnection } from './subclass-probe.ts'
 
 /** 插件形态的适配器注册(guide/04 §4.4:注册是插件的事,effect 卸载时自动撤销)。 */
 const echoPlugin = {
@@ -146,6 +146,27 @@ describe('单元二:注册表的规矩', () => {
       expect(direct[direct.length - 1]).toEqual({ type: 'finish', reason: { kind: 'stop' } })
 
       handle()
+    })
+  }, 60_000)
+
+  it('qa/03 追问·机制验证:晚绑定查找发生在「被引用的名字」上——遮蔽 streamWithConnection 不生效,遮蔽 implementation 生效', async () => {
+    await withLlm(async (ctx) => {
+      // D(a):闭包接收者是内部实现对象,sub 实例上的遮蔽拦截不到
+      const subA = new SubclassedDeepSeekAdapter()
+      shadowStreamWithConnection(subA)
+      ctx.llm.registerAdapter(['probe-a'], subA)
+      const viaA = await collectChunks(ctx.llm.stream(buildRequest({ provider: 'probe-a', model: 'deepseek-chat' })))
+      expect(viaA.some((c) => c.type === 'text-delta')).toBe(false) // 遮蔽没跑
+      const lastA = viaA[viaA.length - 1]
+      expect(lastA.type === 'finish' && lastA.reason.kind).toBe('error') // 内部对象的真传输层跑了
+
+      // D(b):门面 prepareCall 里 this.implementation() 是对 sub 的晚绑定——遮蔽命中
+      const subB = new SubclassedDeepSeekAdapter()
+      shadowImplementationWithDuck(subB, new DuckAdapter())
+      ctx.llm.registerAdapter(['probe-b'], subB)
+      const viaB = await collectChunks(ctx.llm.stream(buildRequest({ provider: 'probe-b', model: 'deepseek-chat' })))
+      expect(viaB.some((c) => c.type === 'text-delta' && c.text.includes('嘎'))).toBe(true) // 鸭子在跑
+      expect(viaB[viaB.length - 1]).toEqual({ type: 'finish', reason: { kind: 'stop' } })
     })
   }, 60_000)
 })

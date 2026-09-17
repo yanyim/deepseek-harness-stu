@@ -20,6 +20,8 @@ import type { GenerateOptions, StreamChunk } from '@deepseek-ai/dsh-llm'
 import { DeepSeekAdapter } from '@deepseek-ai/dsh-llm-deepseek'
 import type { DeepSeekAdapterOptions } from '@deepseek-ai/dsh-llm-deepseek'
 
+import { DuckAdapter } from './duck-adapter.ts'
+
 /** override 是否被调用的在场证明:runtime 路径的输出里找不到它 = override 没跑。 */
 export const OVERRIDE_MARKER = 'override 在场证明'
 
@@ -66,4 +68,23 @@ export class SubclassedDeepSeekAdapter extends DeepSeekAdapter {
       yield { type: 'finish', reason: { kind: 'stop' } }
     })()
   }
+}
+
+/** 蹭内部名实验 D(a):在 sub 实例上遮蔽 streamWithConnection。
+ *  预期(且实测)【不生效】:门面 prepareCall 返回的闭包,接收者是 implementation()
+ *  new 出来的内部实现对象——晚绑定查找发生在内部对象的原型链上,根本到不了 sub 实例。 */
+export function shadowStreamWithConnection(sub: SubclassedDeepSeekAdapter): void {
+  ;(sub as unknown as { streamWithConnection: () => AsyncGenerator<StreamChunk> }).streamWithConnection =
+    async function* () {
+      yield { type: 'text-delta', index: 0, text: OVERRIDE_MARKER }
+    }
+}
+
+/** 蹭内部名实验 D(b):把门面的 implementation() 实例遮蔽成鸭子。
+ *  预期(且实测)【生效】:门面 prepareCall 写的是 this.implementation()——这是
+ *  对 sub 的晚绑定查找,实例遮蔽命中,dispatch 从此走鸭子。
+ *  但 implementation() 是 TS private 内部名:无契约,升级即碎——
+ *  「扩展点 = 被文档承诺 + 被 dispatch 引用的名字」的反面教材。 */
+export function shadowImplementationWithDuck(sub: SubclassedDeepSeekAdapter, duck: DuckAdapter): void {
+  ;(sub as unknown as { implementation: () => DuckAdapter }).implementation = () => duck
 }
