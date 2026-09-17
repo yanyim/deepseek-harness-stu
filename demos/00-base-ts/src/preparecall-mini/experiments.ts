@@ -8,7 +8,7 @@
  */
 import { BaseSub } from './base-style.ts'
 import { DetachedStyle } from './detached-style.ts'
-import { FacadeStyle, FacadeSub } from './facade-style.ts'
+import { FacadeStyle, FacadeSub, wireObserver } from './facade-style.ts'
 import { SelfFacadeStyle } from './self-facade.ts'
 
 export function runPrepareCallExperiments(): string[] {
@@ -20,6 +20,10 @@ export function runPrepareCallExperiments(): string[] {
   out.push(`   (分派链不经过 stream → 子类 override 死代码)`)
   out.push(`③ 门面直调(不经 prepare):stream("hi") → ${new FacadeStyle().stream('hi')}`)
   out.push(`   (stream 是 abstract 逼出来的转发方法——直调也是一条活路)`)
+  wireObserver.calls = 0
+  new FacadeStyle().prepare().stream('hi')
+  new FacadeStyle().stream('hi')
+  out.push(`   (汇合实测:两扇门各走一次,WireTransport.stream 执行 ${wireObserver.calls} 次——一套实现,不是两套)`)
   out.push(`④ 子类旁路直调:stream("hi") → ${new FacadeSub().stream('hi')}`)
   out.push(`   (直调同样晚绑定——override 死不死取决于走哪条路,不是方法本身)`)
 

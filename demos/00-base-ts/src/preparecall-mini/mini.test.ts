@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest'
 
 import { BaseSub } from './base-style.ts'
 import { DetachedStyle } from './detached-style.ts'
-import { FacadeStyle, FacadeSub } from './facade-style.ts'
+import { FacadeStyle, FacadeSub, wireObserver } from './facade-style.ts'
 import { runPrepareCallExperiments } from './experiments.ts'
 import { SelfFacadeStyle } from './self-facade.ts'
 
@@ -24,6 +24,7 @@ describe('单元三:简化版 prepareCall——四路对照 + 反例', () => {
       '   (分派链不经过 stream → 子类 override 死代码)',
       '③ 门面直调(不经 prepare):stream("hi") → wire(hi)',
       '   (stream 是 abstract 逼出来的转发方法——直调也是一条活路)',
+      '   (汇合实测:两扇门各走一次,WireTransport.stream 执行 2 次——一套实现,不是两套)',
       '④ 子类旁路直调:stream("hi") → SUB.stream(hi)',
       '   (直调同样晚绑定——override 死不死取决于走哪条路,不是方法本身)',
       '⑤ 解构姿势:prepare().stream("hi") → TypeError(this=undefined)',
@@ -41,6 +42,14 @@ describe('单元三:简化版 prepareCall——四路对照 + 反例', () => {
   it('字段级:直调两条路——门面转发是活路,子类 override 直调命中', () => {
     expect(new FacadeStyle().stream('x')).toBe('wire(x)') // 转发实现
     expect(new FacadeSub().stream('x')).toBe('SUB.stream(x)') // 直调晚绑定
+  })
+
+  it('字段级:一套实现,两扇门——prepare 路与直调路汇合到同一段 WireTransport.stream', () => {
+    wireObserver.calls = 0
+    const viaPrepare = new FacadeStyle().prepare().stream('x')
+    const viaDirect = new FacadeStyle().stream('x')
+    expect(viaPrepare).toBe(viaDirect) // 两扇门输出一致
+    expect(wireObserver.calls).toBe(2) // 且执行的是同一段代码(共两次,不多不少)
   })
 
   it('字段级:解构姿势抛 TypeError', () => {
