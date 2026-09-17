@@ -1,10 +1,10 @@
 /**
- * 目标:锁定单元三行为——六姿势对照矩阵 + 字段级断言(与 demos/06 真实链路版
+ * 目标:锁定单元三行为——五姿势对照矩阵 + 字段级断言(与 demos/06 真实链路版
  *       探针 C/D 同构)。
  * 思路:剧本整列 toEqual(experiments.ts 共用)+ 每姿势标本一个字段级用例;
  *       abstract 强制力的编译层证据在 prepared.ts 的 @ts-expect-error。
- * 对照:./prepared.ts ./base-style.ts ./facade-style.ts ./detached-style.ts
- *       ./self-facade.ts;demos/06 registry/subclass-probe.ts + facade-pattern.ts;
+ * 对照:./prepared.ts ./base-style.ts ./facade-style.ts ./detached-style.ts;
+ *       demos/06 registry/subclass-probe.ts + facade-pattern.ts;
  *       qa/03「机制墙的原理」与「门面为什么挂 stream」。
  */
 import { describe, expect, it } from 'vitest'
@@ -13,7 +13,6 @@ import { BaseSub } from './base-style.ts'
 import { DetachedStyle } from './detached-style.ts'
 import { FacadeStyle, FacadeSub, wireObserver } from './facade-style.ts'
 import { runPrepareCallExperiments } from './experiments.ts'
-import { SelfFacadeStyle } from './self-facade.ts'
 
 describe('单元三:简化版 prepareCall——四路对照 + 反例', () => {
   it('五幕剧本整列锁定', () => {
@@ -29,8 +28,6 @@ describe('单元三:简化版 prepareCall——四路对照 + 反例', () => {
       '   (直调同样晚绑定——override 死不死取决于走哪条路,不是方法本身)',
       '⑤ 解构姿势:prepare().stream("hi") → TypeError(this=undefined)',
       '   (const s = this.stream 取出的瞬间 this 就丢了——箭头只捕获「自己的」外层 this,救不了别人)',
-      '⑥ 自指门面:stream("hi") → RangeError(栈溢出:无限递归)',
-      '   (自己当自己的内部对象 = 委托链没有基准情形;不需要别的工作对象,就不需要门面——那是姿势一)',
     ])
   })
 
@@ -55,10 +52,5 @@ describe('单元三:简化版 prepareCall——四路对照 + 反例', () => {
   it('字段级:解构姿势抛 TypeError', () => {
     const prepared = new DetachedStyle().prepare()
     expect(() => prepared.stream('x')).toThrow(TypeError)
-  })
-
-  it('字段级:自指门面抛 RangeError——委托链没有基准情形即无限递归', () => {
-    expect(() => new SelfFacadeStyle().stream('x')).toThrow(RangeError)
-    expect(() => new SelfFacadeStyle().prepare()).toThrow(RangeError)
   })
 })

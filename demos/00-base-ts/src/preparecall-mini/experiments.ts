@@ -1,15 +1,14 @@
 /**
- * 目标:幕三串场——把六个姿势缝成一份剧本(每姿势一行的对照矩阵),
+ * 目标:幕三串场——把五个姿势缝成一份剧本(每姿势一行的对照矩阵),
  *       main 打印、测试整列锁定共用。
  * 思路:调用形态都是 stream("hi") / prepare().stream("hi");差别只在两件事:
  *       prepare 方法体里 this 的去向,以及你走哪条路(分派链 or 直调)。
- * 对照:./base-style.ts ./facade-style.ts ./detached-style.ts ./self-facade.ts
+ * 对照:./base-style.ts ./facade-style.ts ./detached-style.ts
  *       (各姿势标本,含各自的三段注释);demos/06 真实链路版探针 C/D;qa/03。
  */
 import { BaseSub } from './base-style.ts'
 import { DetachedStyle } from './detached-style.ts'
 import { FacadeStyle, FacadeSub, wireObserver } from './facade-style.ts'
-import { SelfFacadeStyle } from './self-facade.ts'
 
 export function runPrepareCallExperiments(): string[] {
   const out: string[] = []
@@ -35,13 +34,5 @@ export function runPrepareCallExperiments(): string[] {
     out.push(`⑤ 解构姿势:prepare().stream("hi") → ${err instanceof TypeError ? 'TypeError(this=undefined)' : String(err)}`)
   }
   out.push(`   (const s = this.stream 取出的瞬间 this 就丢了——箭头只捕获「自己的」外层 this,救不了别人)`)
-
-  try {
-    new SelfFacadeStyle().stream('hi')
-    out.push('⑥ 自指门面:不该到这里')
-  } catch (err) {
-    out.push(`⑥ 自指门面:stream("hi") → ${err instanceof RangeError ? 'RangeError(栈溢出:无限递归)' : String(err)}`)
-  }
-  out.push(`   (自己当自己的内部对象 = 委托链没有基准情形;不需要别的工作对象,就不需要门面——那是姿势一)`)
   return out
 }

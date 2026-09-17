@@ -5,8 +5,7 @@
  * 思路:receiver 在 impl() 里换人——内部对象 WireTransport 是委托链的基准情形
  *       (真正干活的工作对象)。门面的 stream 不是第二套实现,是转发:一套代码
  *       (WireTransport.stream),两扇门(prepare 闭包 / stream 转发),殊途同归
- *       ——wireObserver 计数器就是汇合证明。对照 self-facade.ts(去掉基准情形
- *       = 无限递归)。
+ *       ——wireObserver 计数器就是汇合证明。
  * 对照:dsh-llm-deepseek 的 DeepSeekAdapter(prepareCall → this.implementation()
  *       .prepareCall();stream → this.implementation().stream(options));
  *       demos/06 registry/subclass-probe.ts 探针 C/D。

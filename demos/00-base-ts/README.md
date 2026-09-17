@@ -38,14 +38,15 @@ pnpm typecheck
   根:abstract stream 逼所有具体子类实现它(不挂编译不过,@ts-expect-error 即证据)
   ① 基类血脉(用缺省 prepare)      闭包写 this.stream    → override 生效
   ② 门面血脉(= DeepSeekAdapter)    prepare 改写为体内 new 内部对象 → override 死代码
-  ③ 门面直调(不经 prepare)         stream 实现为转发     → 直调也是活路
+  ③ 门面直调(不经 prepare)         stream 实现为转发     → 直调也是活路;两扇门
+                                     汇合到同一段 WireTransport.stream(一套实现)
   ④ 子类旁路直调                   直调同样晚绑定         → override 命中
   ⑤ 解构(反例)                     const s = this.stream → this 丢失直接炸
-  ⑥ 自指(反例)                     impl() 返回 new 自己 → 无基准情形,RangeError 栈溢出
 
   门面挂 stream 的完整答案:abstract 逼它挂(第一层);它选择挂成「转发给内部
   对象」(第二层),所以直调能用;只是 runtime 的分派链(prepare)不走它(第三层)。
-  门面不能自己当自己的内部对象(⑥):委托链必须有基准情形——真正干活的工作对象。
+  委托链必须有基准情形——真正干活的工作对象(WireTransport);门面自己当自己的
+  内部对象 = 无限递归(自指反例已退役,见 git 历史 954eb03..88047f1)。
 ```
 
 ## 组织:目录树 = 论证树
@@ -64,8 +65,7 @@ pnpm typecheck
     base-style.ts            姿势①:基类血脉(缺省 prepare → override 生效)
     facade-style.ts          姿势②③:门面血脉(prepare 转移 + stream 转发)+ WireTransport
     detached-style.ts        姿势⑤:解构反例(this 丢失)
-    self-facade.ts           姿势⑥:自指反例(无基准情形,栈溢出)
-    experiments.ts           串场:六姿势缝成对照矩阵剧本
+    experiments.ts           串场:五姿势缝成对照矩阵剧本
     mini.test.ts             剧本整列锁定 + 每姿势字段级断言
   main.ts                  串场(幕间串词把三幕缝回 demos/06 的问题)
 ```
